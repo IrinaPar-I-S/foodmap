@@ -13,6 +13,10 @@ price = input('Максимальная сумма чека... ')
 
 names, addresses, metro = [],[],[]
 req = 'https://msk.allcafe.ru/catalog/?query='
+Metro = #надо загрузить json'ы из гитхаба
+District = 
+Price = 
+Cuisine = 
 
 
 if address != 'пропуск' :
@@ -24,13 +28,13 @@ if address != 'пропуск' :
     district = address['city_district'].strip().lowercase()
     for i in address['metro'] :
         metro.append (i['name'].strip().lowercase())
-    req += '&district[]='+dic_Districts.get(district,'арбат') #чтоб если чего-то нет в списке, он не сломался
+    req += '&district[]='+Districts.get(district,'арбат') #чтоб если чего-то нет в списке, он не сломался
     for i in range (len(metro)) :
-        req += '&metro[]='+dic_Metro.get(metro[i],'арбатская') #чтоб если чего-то нет в списке, он не сломался
+        req += '&metro[]='+Metro.get(metro[i],'арбатская') #чтоб если чего-то нет в списке, он не сломался
 
 if price != 'пропуск' :
     price = int(price)
-    for k in dic_Price.keys() :
+    for k in Price.keys() :
         if k <= price :
             req += '&bill[]='+dic_Price[k]
 
@@ -40,19 +44,14 @@ html = requests.get(req).text
 soup = BeautifulSoup(html,'html.parser')
 for name in soup.find_all('a', {'class':'placeList_name'}) :
     a = name.text.strip()
-    if a in names :
-        pass
-    else :
+    if not a in names :
         names.append (a)
-#тут надо доработать, потому что такая тема будет раблотать, если все разные метса с разными адресами,
+#тут надо доработать, потому что такая тема будет раблотать, если все разные места с разными адресами,
 #а если в одном доме несколько или, например, сеть с несколькими точками - все развалится
 for addr in soup.find_all('span', {'class':'placeList_addr'}) :
     a = addr.text.strip()
-    if a in addresses :
-        pass
-    else :
-        while '\n' in a :
-            a = a.replace('\n','')
+    if not a in addresses :
+        a = a.replace('\n','')
         addresses.append (a)
 for i in range (len (names)) :
     print(names[i], '\n', addresses[i])
