@@ -1,0 +1,22 @@
+{
+	'авторская':'avtorskaya',
+	'азиатская':'aziatskaya',
+	'американская':'amerikanskaya',
+	'вегетарианская':'vegetarianskaya',
+	'восточная':'vostochnaya',
+	'грузинская':'gruzinskaya',
+	'еврейская':'evreyskaya',
+	'европейская':'evropeyskaya',
+	'итальянская':'italyanskaya',
+	'кавказская':'kavkazskaya',
+	'китайская':'kitayskaya',
+	'корейская':'koreyskaya',
+	'немецкая':'nemetskaya',
+	'паназиатская':'panaziatskaya',
+	'русская':'russkaya',
+	'смешанная':'smeshannaya',
+	'средиземноморская':'sredizemnomorskaya',
+	'узбекская':'uzbekskaya',
+	'французская':'frantsuzskaya',
+	'японская':'yaponskaya'
+}
