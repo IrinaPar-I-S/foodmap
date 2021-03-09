@@ -29,8 +29,8 @@ if address != 'пропуск' :
     for i in address['metro'] :
         metro.append (i['name'].strip().lowercase())
     req += '&district[]='+Districts.get(district,'арбат') #чтоб если чего-то нет в списке, он не сломался
-    for i in range (len(metro)) :
-        req += '&metro[]='+Metro.get(metro[i],'арбатская') #чтоб если чего-то нет в списке, он не сломался
+    for i in metro :
+        req += '&metro[]='+Metro.get(i,'арбатская') #чтоб если чего-то нет в списке, он не сломался
 
 if price != 'пропуск' :
     price = int(price)
