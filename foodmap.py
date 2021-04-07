@@ -134,7 +134,7 @@ def searching (message) :
                 a += ' '
                 like_counter(a)
         like_counter(a)
-        b = name.name
+        b = name.name #там в тэге ссылка
         b = b.split('"')
         b = b[1]
         links.append(b)
@@ -144,59 +144,61 @@ def searching (message) :
         a = a.replace('\n','')
         a = a.replace('  ','')
         addresses.append(a)
-    n = 0 #счетчик
-    for i in names.keys() :
-        names[i] = addresses[n]
-        n += 1 #счетчик
-#    out = telebot.types.InlineKeyboardMarkup()
+    for i in range (len(names.keys())) :
+        names.keys()[i] += addresses[i] #добавляет адрес к названию
+    for i in range (len(links)) :
+        names[names.keys()[i]] = links[i] #
+    out = telebot.types.InlineKeyboardMarkup()
     for k, v in names.items() :
+        a = telebot.types.InlineKeyboardButton(k,'msk.allcafe.ru'+v)
         print(k,v)
-    print (links
-
+        out.add(a)
+    bot.send_message(message.chat.id,emoji.emojize(':smile:',use_aliases=True),reply_markup=out)
+    
 
 
 #все сложно с текстовыми сообщениями, поэтому тут одна функция, которая на самом деле разная
 @bot.message_handler(content_types=['text'])
-#def getting_text_messages (message,flag=flag) :
-#    if flag[0] == '0' : #дефолтный вариант
- #       item = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True).row('/help')
-  #      bot.send_message(message.chat.id,'Не понимаю, что ты хочешь сказать. Попробуй воспользоваться кнопкой /help',reply_markup=item)
-   # elif flag[0] == '1' : #для функции определения цены
-    #    price = message.text
-     #   with open ('price.json', 'r', encoding='utf-8') as f :
-      #      Price = json.load(f)
-       # for k in Price.keys() :
-        #    if int(k) <= int(price) :
-         #       prms['bill[]'].append (Price[k])
-#        print(prms)
- #       bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
-  #      flag = 0
-   # elif flag[0] == '2' : #для функции определения метро
-    #    metro = message.text
-     #   with open ('metro.json', 'r', encoding='utf-8') as f :
-      #      Metro = json.load(f)
-       # prms['metro[]'] = Metro.get(metro.lower(),'арбатская') #чтоб если чего-то нет в списке, он не сломался
-        #print(prms)
-        #bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
-        #flag = 0
-#    elif flag[0] == '3' : #для функции определения адреса
- #       address = 'Москва '+message.text
-  #      with open ('metro.json', 'r', encoding='utf-8') as f :
-   #         Metro = json.load(f)
-    #    with open ('districts.json', 'r', encoding='utf-8') as f :
-     #       Districts = json.load(f)
-      #  dadata = Dadata(conf.a,conf.b)
-       # address = dadata.clean('address', address)
-        #district = address['city_district'].strip().lowercase()
-#        if isinstance(address['metro'],list) : #может быть несколько станций метро или одна
- #           for i in address['metro'] :
-  #              prms['metro[]'].append (Metro.get(i['name'].strip().lower(),'арбатская')) #чтоб если чего-то нет в списке, он не сломался
-   #     else :
-    #        prms['metro[]'] = Metro.get(address['metro'],'арбатская')
-     #   prms['district[]'] = Districts.get(district,'арбат') #чтоб если чего-то нет в списке, он не сломался
-      #  print(prms)
-       # bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
-        #flag = 0
+def getting_text_messages (message,flag=flag) :
+    if flag[0] == '0' : #дефолтный вариант
+        item = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True).row('/help')
+        bot.send_message(message.chat.id,'Не понимаю, что ты хочешь сказать. Попробуй воспользоваться кнопкой /help',reply_markup=item)
+    elif flag[0] == '1' : #для функции определения цены
+        price = message.text
+        with open ('price.json', 'r', encoding='utf-8') as f :
+            Price = json.load(f)
+        for k in Price.keys() :
+            if int(k) <= int(price) :
+                prms['bill[]'].append (Price[k])
+        print(prms)
+        bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
+        flag = 0
+    elif flag[0] == '2' : #для функции определения метро
+        metro = message.text
+        with open ('metro.json', 'r', encoding='utf-8') as f :
+            Metro = json.load(f)
+        prms['metro[]'] = Metro.get(metro.lower(),'арбатская') #чтоб если чего-то нет в списке, он не сломался
+        print(prms)
+        bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
+        flag = 0
+    elif flag[0] == '3' : #для функции определения адреса
+        address = 'Москва '+message.text
+        with open ('metro.json', 'r', encoding='utf-8') as f :
+            Metro = json.load(f)
+        with open ('districts.json', 'r', encoding='utf-8') as f :
+            Districts = json.load(f)
+        dadata = Dadata(conf.a,conf.b)
+        address = dadata.clean('address', address)
+        district = address['city_district'].strip().lowercase()
+        if isinstance(address['metro'],list) : #может быть несколько станций метро или одна
+            for i in address['metro'] :
+                prms['metro[]'].append (Metro.get(i['name'].strip().lower(),'арбатская')) #чтоб если чего-то нет в списке, он не сломался
+        else :
+            prms['metro[]'] = Metro.get(address['metro'],'арбатская')
+        prms['district[]'] = Districts.get(district,'арбат') #чтоб если чего-то нет в списке, он не сломался
+        print(prms)
+        bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
+        flag = 0
         
 
 
