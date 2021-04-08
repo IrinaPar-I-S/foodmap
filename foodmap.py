@@ -15,6 +15,7 @@ flag = ['']
 
 
 
+
 #здесь хранятся кнопки для пользователя
 def menu () :
     me_nu = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -33,8 +34,8 @@ def starting (message) :
     item = telebot.types.InlineKeyboardButton(text='Ссылка на сайт',url='msk.allcafe.ru')
     allcafe = telebot.types.InlineKeyboardMarkup().add(item)
     item = menu()
-    bot.send_message(message.chat.id,'Добро пожаловать! Я бот, подбирающий список ресторанов, кафе и баров с сайта allcafe.ru',reply_markup=allcafe)
-    bot.send_message(message.chat.id,'Какие параметры ты хочешь учесть при выборе?',reply_markup=item)
+    bot.send_message(message.from_user.id,'Добро пожаловать! Я бот, подбирающий список ресторанов, кафе и баров с сайта allcafe.ru',reply_markup=allcafe)
+    bot.send_message(message.from_user.id,'Какие параметры ты хочешь учесть при выборе?',reply_markup=item)
 
 
 
@@ -66,9 +67,12 @@ def getting_cuisine (message) :
     bot.send_message(message.from_user.id,'Выбери любимую кухню:',reply_markup=Cuisine)
     @bot.callback_query_handler(func=None)
     def defining_cuisine(message):
-        prms['cuisine[]'] = message.data
-        print(prms)
-        bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
+        if message.data == '/start' :
+            starting (message)
+        else :
+            prms['cuisine[]'] = message.data
+            print(prms)
+            bot.send_message(message.from_user.id,emoji.emojize(':ok_hand:',use_aliases=True),reply_markup=menu())
         
 
 
@@ -81,7 +85,6 @@ def getting_price (message) :
 
 
 
-# ??? доработать, чтоб можно было выбрать несколько ???
 #штука обращается к json-у и берет оттуда станцию метро по названию
 @bot.message_handler(commands=['metro'])
 def getting_metro (message) :
@@ -94,7 +97,7 @@ def getting_metro (message) :
 @bot.message_handler(commands=['address'])
 def getting_address (message) :
     flag[0] = '3' #отсылка к нужной функции
-    bot.send_message(message.from_user.id,'Введи название станции')
+    bot.send_message(message.from_user.id,'Введи адрес: улицу (по возможности, номер дома)')
 
     
 
@@ -103,7 +106,7 @@ def getting_address (message) :
 @bot.message_handler(commands=['help'])
 def helping (message) :
     item = menu()
-    bot.send_message(message.from_user.id,'Бот помогает находить рестораны, кафе, бары, закусочные, используя несколько параметров, с помощью сайта allcafe.ru\n\nДля того, чтобы воспользоваться ботом, нажми start\nДля того, чтобы сбросить данные, введенные ранее, нажми cancel\n\nКоманда address позволяет искать места поблизости, ту же функцию выполняет команда metro, поэтому их лучше вместе не использовать. Команда price позволяет ограничить предполагаемую сумму чека.\nПри использовании каждой из этих команд бот предложит ввести соответственно адрес, название станции метро или сумму с помощью клавиатуры.\nКоманда cuisine позволяет выбрать кухню.\n\nЗапрос после введения всех данных отправляется с помощью команды search.\n\nПриятного пользования!',reply_markup=item)
+    bot.send_message(message.from_user.id,'Бот помогает находить рестораны, кафе, бары, закусочные, используя несколько параметров, с помощью сайта allcafe.ru\n\nДля того, чтобы воспользоваться ботом, нажми start\nДля того, чтобы сбросить данные, введенные ранее, нажми cancel\n\nКоманда address позволяет искать места поблизости, ту же функцию выполняет команда metro, поэтому можно выбрать одну из них. Команда price позволяет ограничить предполагаемую сумму чека.\nПри использовании каждой из этих команд бот предложит ввести соответственно адрес, название станции метро или сумму с помощью клавиатуры.\nКоманда cuisine позволяет выбрать кухню.\n\nЗапрос после введения всех данных отправляется с помощью команды search.\n\nПриятного пользования!',reply_markup=item)
 
 
 
@@ -116,13 +119,14 @@ def cancelling (message) :
 
 
 #?page=1
-#тут надо доработать
+#??? надо ли дорабатывать, что сайт иногда выдает несколько страниц поиска, и обращаться к каждой?
 @bot.message_handler(commands=['search'])
 def searching (message) :
+    names, addresses, links = {},[],[]
     req='https://msk.allcafe.ru/catalog/?query='
-    names, addresses = {},[]
     html = requests.get(req, params = prms) #запрос на сайт
-    print (html.request.url)
+    req = html.request.url
+    print (req)
     html = html.text
     soup = BeautifulSoup(html,'html.parser')
     for name in soup.find_all('a', {'class':'placeList_name'}) : #ищет названия мест
@@ -134,9 +138,9 @@ def searching (message) :
                 a += ' '
                 like_counter(a)
         like_counter(a)
-        b = name.name #там в тэге ссылка
+        b = str(name) #там в тэге ссылка
         b = b.split('"')
-        b = b[1]
+        b = b[3]
         links.append(b)
     for i in range (len(soup.find_all('span', {'class':'placeList_addr'}))) : #ищет адреса мест в том же порядке
         addr = soup.find_all('span', {'class':'placeList_addr'})[i]
@@ -144,17 +148,24 @@ def searching (message) :
         a = a.replace('\n','')
         a = a.replace('  ','')
         addresses.append(a)
-    for i in range (len(names.keys())) :
-        names.keys()[i] += addresses[i] #добавляет адрес к названию
-    for i in range (len(links)) :
-        names[names.keys()[i]] = links[i] #
-    out = telebot.types.InlineKeyboardMarkup()
+    n=0 #счетчик
+    for i in names.keys() :
+        names[i] = addresses[n] #добавляет адрес к названию
+        n+=1 #счетчик
+    bot.send_message(message.chat.id,'Вот что мне удалось найти:')
+    out=' '
+    n=0 #счетчик
     for k, v in names.items() :
-        a = telebot.types.InlineKeyboardButton(k,'msk.allcafe.ru'+v)
-        print(k,v)
-        out.add(a)
-    bot.send_message(message.chat.id,emoji.emojize(':smile:',use_aliases=True),reply_markup=out)
+        out += k+'\n'+v+'\nmsk.allcafe.ru'+links[n]+'\n\n'
+        if n%10 == 0 :
+            bot.send_message(message.chat.id,out)
+            out = ' '
+        n+=1 #счетчик
+    item = telebot.types.InlineKeyboardMarkup().add(telebot.types.InlineKeyboardButton('Начать заново',callback_data='/start'))
+    bot.send_message(message.chat.id,out,reply_markup=item)
+        
     
+
 
 
 #все сложно с текстовыми сообщениями, поэтому тут одна функция, которая на самом деле разная
@@ -189,7 +200,7 @@ def getting_text_messages (message,flag=flag) :
             Districts = json.load(f)
         dadata = Dadata(conf.a,conf.b)
         address = dadata.clean('address', address)
-        district = address['city_district'].strip().lowercase()
+        district = address['city_district'].strip().lower()
         if isinstance(address['metro'],list) : #может быть несколько станций метро или одна
             for i in address['metro'] :
                 prms['metro[]'].append (Metro.get(i['name'].strip().lower(),'арбатская')) #чтоб если чего-то нет в списке, он не сломался
