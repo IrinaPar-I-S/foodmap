@@ -6,10 +6,19 @@ import emoji
 from bs4 import BeautifulSoup
 from dadata import Dadata
 from math import radians, cos, sin, asin, sqrt
+import flask
 
 
 
+WEBHOOK_URL_BASE = "https://{}:{}".format(conf.WEBHOOK_HOST, conf.WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/{}/".format(conf.TOKEN)
 bot = telebot.TeleBot(conf.TOKEN)
+bot.remove_webhook()
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
+
+
+app = flask.Flask(__name__)
+
 
 prms = {'district[]':'','metro[]':[],'cuisine[]':'','bill[]':[]}
 flag = ['']
@@ -299,5 +308,20 @@ def getting_text_messages (message,flag=flag) :
         
 
 
+@app.route(WEBHOOK_URL_PATH, methods=['POST'])
+def webhook():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
+
+
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    import os
+
+    app.debug = False
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
